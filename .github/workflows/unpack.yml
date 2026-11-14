@@ -1,0 +1,20 @@
+name: Publish source
+on:
+ push:
+  paths: ['*.zip']
+ workflow_dispatch:
+permissions: {contents: write}
+jobs:
+ src:
+  runs-on: ubuntu-latest
+  steps:
+  - uses: actions/checkout@v4
+  - name: Unpack the zip into real files
+    run: |
+     Z=$(ls *.zip | head -n 1)
+     rm -rf /tmp/x; mkdir /tmp/x; unzip -q "$Z" -d /tmp/x
+     D=$(ls -d /tmp/x/*/ | head -n 1)
+     find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+     cp -a "$D". .
+     git config user.name github-actions; git config user.email actions@github.com
+     git add -A; git commit -m "Publish source" || echo "nothing to commit"; git push origin HEAD
